@@ -14,7 +14,10 @@ import practice.java.demo.dto.StudentRequestDTO;
 import practice.java.demo.dto.StudentResponseDTO;
 import practice.java.demo.model.Student;
 import practice.java.demo.response.ApiResponse;
+import practice.java.demo.response.PaginationResponse;
 import practice.java.demo.service.StudentService;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequestMapping("/student")
@@ -53,20 +56,24 @@ public class StudentController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<StudentNameDTO>>> getAllStudents() {
-
-        List<StudentNameDTO> students = studentService.getAllStudents();
-
-        ApiResponse<List<StudentNameDTO>> response =
-                new ApiResponse<>(
-                        200,
-                        "Students fetched successfully",
-                        students
-                );
-
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping
+        public ResponseEntity<ApiResponse<PaginationResponse<StudentNameDTO>>> getAllStudents(
+        
+                @PageableDefault(page = 0, size = 5)
+                Pageable pageable) {
+                
+            PaginationResponse<StudentNameDTO> students =
+                    studentService.getAllStudents(pageable);
+                
+            ApiResponse<PaginationResponse<StudentNameDTO>> response =
+                    new ApiResponse<>(
+                            200,
+                            "Students fetched successfully",
+                            students
+                    );
+            
+            return ResponseEntity.ok(response);
+        }
 
 
     @PutMapping("/{id}")
@@ -92,6 +99,22 @@ public class StudentController {
                         200,
                         "Student deleted successfully",
                         null
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<StudentNameDTO>>> searchStudentsByName(@RequestParam String name) {
+
+        List<StudentNameDTO> students = studentService.searchStudentsByName(name);
+
+        ApiResponse<List<StudentNameDTO>> response =
+                new ApiResponse<>(
+                        200,
+                        "Students fetched successfully",
+                        students
                 );
 
         return ResponseEntity.ok(response);

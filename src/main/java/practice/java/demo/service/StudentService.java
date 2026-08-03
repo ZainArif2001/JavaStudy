@@ -13,6 +13,8 @@ import practice.java.demo.model.Department;
 import practice.java.demo.model.Student;
 import practice.java.demo.repository.DepartmentRepository;
 import practice.java.demo.repository.StudentRepository;
+import practice.java.demo.response.PaginationResponse;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -56,27 +58,32 @@ public class StudentService {
     }
 
     // Get All Students
-    public List<StudentNameDTO> getAllStudents() {
-    
-        List<Student> students = studentRepository.findAll();
-    
-        List<StudentNameDTO> response = new ArrayList<>();
-    
-        for (Student student : students) {
-        
-            StudentNameDTO dto = new StudentNameDTO();
-        
-            dto.setName(student.getName());
-            dto.setAge(student.getAge());
-        
-            if (student.getDepartment() != null) {
-                dto.setDepartmentName(student.getDepartment().getName());
-            }
-        
-            response.add(dto);
-        }
-    
-        return response;
+    public PaginationResponse<StudentNameDTO> getAllStudents(Pageable pageable) {
+
+    Page<Student> page = studentRepository.findAll(pageable);
+
+    List<StudentNameDTO> students = new ArrayList<>();
+
+    for (Student student : page.getContent()) {
+
+        StudentNameDTO dto = new StudentNameDTO();
+
+        dto.setName(student.getName());
+        dto.setAge(student.getAge());
+
+        students.add(dto);
+    }
+
+    PaginationResponse<StudentNameDTO> response =
+            new PaginationResponse<>();
+
+    response.setContent(students);
+    response.setCurrentPage(page.getNumber());
+    response.setTotalPages(page.getTotalPages());
+    response.setTotalElements(page.getTotalElements());
+    response.setPageSize(page.getSize());
+
+    return response;
     }
     // Update Student
     public StudentResponseDTO updateStudent(Long id, StudentRequestDTO dto) {
@@ -110,5 +117,31 @@ public class StudentService {
         }
 
         studentRepository.deleteById(id);
+    }
+
+
+    public List<StudentNameDTO> searchStudentsByName(String name) {
+
+        List<Student> students = studentRepository.findByNameContainingIgnoreCase(name);
+    
+        List<StudentNameDTO> dtos = new ArrayList<>();
+    
+        for (Student student : students) {
+    
+            StudentNameDTO dto = new StudentNameDTO();
+    
+            dto.setName(student.getName());
+            dto.setAge(student.getAge());
+    
+            if (student.getDepartment() != null) {
+                dto.setDepartmentName(student.getDepartment().getName());
+            } else {
+                dto.setDepartmentName("No Department");
+            }
+    
+            dtos.add(dto);
+        }
+    
+        return dtos;
     }
 }
